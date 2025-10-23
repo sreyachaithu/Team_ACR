@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>AI Based Pets Disease Classifier</title>
+    <style>
+        body { text-align: center; font-family: Arial; }
+        img { width: 150px; height: 150px; border-radius: 50%; margin: 10px; cursor: grab; }
+        .gallery { margin-bottom: 30px; }
+        #drop-area {
+            border: 2px dashed #ccc; padding: 20px;
+            width: 300px; margin: auto;
+            background-color: #f9f9f9;
+        }
+        #preview { margin-top: 10px; }
+        table { margin: auto; border-collapse: collapse; margin-top: 20px; }
+        td, th { border: 1px solid #ddd; padding: 8px; }
+    </style>
+</head>
+<body>
+
+    <h1>AI Based Pets Disease Classifier</h1>
+
+    <!-- Display Images -->
+    <div class="gallery">
+        <img src="{{ url_for('static', filename='uploads/mange (46).jpg') }}" draggable="true" ondragstart="drag(event)" id="maria1">
+        <img src="{{ url_for('static', filename='uploads/Untitled20.jpg') }}" draggable="true" ondragstart="drag(event)" id="lionel1">
+        <img src="{{ url_for('static', filename='uploads/ringworm (126).jpg') }}" draggable="true" ondragstart="drag(event)" id="virat1">
+        <img src="{{ url_for('static', filename='uploads/hotspot (86).jpg') }}" draggable="true" ondragstart="drag(event)" id="serena1">
+        <img src="{{ url_for('static', filename='uploads/flea_allergy (36).jpg') }}" draggable="true" ondragstart="drag(event)" id="roger1">
+    </div>
+
+    <!-- Drop area -->
+    <div id="drop-area" ondrop="drop(event)" ondragover="allowDrop(event)">
+        <p>Drag & Drop an image here or <strong>Browse</strong> below</p>
+        <form id="uploadForm" action="/predict" method="post" enctype="multipart/form-data">
+            <input type="file" id="fileInput" name="image" required accept="image/*" onchange="handleBrowse(this)">
+            <br><br>
+            <input type="submit" value="Classify">
+        </form>
+        <div id="preview"></div>
+    </div>
+
+    <!-- Show Prediction -->
+    {% if prediction %}
+        <h2>Predicted: {{ prediction }}</h2>
+        <img src="{{ filepath }}" width="200">
+        <h3>Prediction Probabilities:</h3>
+        <table>
+            <tr><th>Player</th><th>Probability (%)</th></tr>
+            {% for player, prob in results %}
+            <tr><td>{{ player }}</td><td>{{ prob }}</td></tr>
+            {% endfor %}
+        </table>
+    {% endif %}
+
+<script>
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+    ev.dataTransfer.setData("text", ev.target.id);
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    var img = document.getElementById(data);
+
+    // Convert image to blob and set to file input
+    fetch(img.src)
+        .then(res => res.blob())
+        .then(blob => {
+            const file = new File([blob], data + ".jpg", { type: blob.type });
+            const container = new DataTransfer();
+            container.items.add(file);
+            document.getElementById('fileInput').files = container.files;
+
+            // Preview
+            document.getElementById("preview").innerHTML = `<img src="${img.src}" width="150">`;
+        });
+}
+
+// Handle browse option
+function handleBrowse(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById("preview").innerHTML = `<img src="${e.target.result}" width="150">`;
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+
+</body>
+</html>
+
